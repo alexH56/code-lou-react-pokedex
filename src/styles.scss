@@ -12,7 +12,7 @@ body {
   font-family: sans-serif;
 }
 
-#pikachu {
+#pika {
   position: fixed;
   top: 1em;
   right: 1em;
@@ -103,6 +103,10 @@ li {
   cursor: pointer;
 }
 
+.details {
+  display:none;
+}
+
 .btn {
   color: white;
   background-color: #C62828;
@@ -123,6 +127,10 @@ li {
 
 #previous {
   margin-right: 1rem;
+}
+
+#back {
+  display: none;
 }
 
 /* Hang */
