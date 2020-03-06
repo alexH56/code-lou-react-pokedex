@@ -1,26 +1,16 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
+import { Details } from './details.js'
+
 import './styles.scss';
-
-// import * as serviceWorker from './serviceWorker';
-
-// const Pokedex = require('pokeapi-js-wrapper');
-
-// const PokeClient = new Pokedex.Pokedex({
-//   protocol: 'https',
-//   cache: true,
-//   timeout: 5000
-// });
-
-// NOTES FOR IMPROVEMENT: use one function for getInfo and changePage by implementing default Arguments. 
-// Use anonymous function calls in onClick instead of separate prev and next functions
 
 class App extends Component {
   state = {
     data: { results: [] },
     details: { id: [0] },
-    species: { results: [] }
+    species: { results: [] },
+    pokeClicked: false
   };
  
   getInfo = async (direction) => {
@@ -29,7 +19,7 @@ class App extends Component {
       // 'results' array has a length. Loads new page:
         ? this.state.data[direction]
       // 'results' array has no length. First page-load:
-        : `https://pokeapi.co/api/v2/pokemon/?offset=0&limit=12`)
+        : `https://pokeapi.co/api/v2/pokemon/?offset=0&limit=12`).catch(err => console.log("Error: " + err))
     
     return await response.json()
       .then(data => {
@@ -50,17 +40,16 @@ class App extends Component {
     return await response.json()
       .then(json => {
         this.setState({ details: json });
-        console.log(json);
-        console.log(this.state.details.abilities[0].ability.name)
-      
         this.getSpecies(this.state.details.id);
       })
   };
 
   showDetails = (name) => {
+    this.setState(
+      {pokeClicked : true}
+    )
     this.getDetails(name);
-      
-    let details = document.querySelector(`li#${name} > div.details`)
+
     let otherPokes = document.querySelectorAll(`ul#list > li:not(#${name})`)
     let otherButtons = document.querySelectorAll(`div#main-content > button:not(#back)`)
     let backButton = document.getElementById('back')
@@ -73,19 +62,29 @@ class App extends Component {
     };
 
     backButton.style.display='inline-block';
-    details.style.display='block';
-    
-    function goBack () {
-      details.style.display='none';
-      backButton.style.display='none';
-  
-      for (let li of otherPokes) {
-          li.style.display='inline-block';
-        };    
-      for (let button of otherButtons) {
-          button.style.display='inline-block';
-        };
-    }
+  }
+
+  goBack (name) {
+    let otherPokes = document.querySelectorAll(`ul#list > li:not(#${name})`)
+    let otherButtons = document.querySelectorAll(`div#main-content > button:not(#back)`)
+    let backButton = document.getElementById('back')
+
+    this.setState(
+      { 
+        pokeClicked: false,
+        details: { id: [0] },
+        species: { results: [] }
+      }
+    )
+
+    backButton.style.display='none';
+
+    for (let li of otherPokes) {
+        li.style.display='inline-block';
+      };    
+    for (let button of otherButtons) {
+        button.style.display='inline-block';
+      };
   }
   
   componentDidMount() {
@@ -96,17 +95,12 @@ class App extends Component {
     const capitalize = string => string[0].toUpperCase() + string.slice(1);
 
     const details = this.state.details
-    const pokeList = this.state.data.results ? this.state.data.results : 'Loading...'
-    const sprite = details.sprites ? details.sprites.front_default  : ''
-    const species = this.state.species.genera ? this.state.species.genera[2].genus : 'Loading...'
-    const id = details.id ? details.id : 'Loading...'
-    const types = details.types
-      ? details.types.map(entry => capitalize(entry.type.name)).join(' / ')
+    const species = this.state.species
+
+    const pokeList = this.state.data.results 
+      ? this.state.data.results 
       : 'Loading...'
-    const abilities = details.abilities 
-      ? details.abilities.map(entry => capitalize(entry.ability.name)).join(', ')
-      : 'Loading...'
-    const weight = details.weight ? details.weight : 'Loading...'
+    
 
     return (
       <div className='App'>
@@ -125,24 +119,35 @@ class App extends Component {
               <li className='poke-card' id={poke.name} key={poke.name} onClick={() => this.showDetails(poke.name)}>
                 <h3>{capitalize(poke.name)}</h3>
 
-                <div className='details'>
-                  <img src={sprite} 
-                  alt= {`${poke.name}`} />
-                  {/* Alternative way of sourcing image:
+                {this.state.pokeClicked?
+                
+                  <Details 
+                    className = 'details'
 
-                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${details.id}.png`} 
-                    alt= {`${poke.name}`} /> */}
-                  <p>#{id}</p>
-                  <p>"{species}"</p>
+                    name = {poke.name}
+                    sprite = {details.sprites 
+                      ? details.sprites.front_default  
+                      : ''}
+                    species = {species.genera 
+                      ? species.genera[2].genus 
+                      : 'Loading...'}
+                    id = {details.id 
+                      ? details.id 
+                      : 'Loading...'}
+                    types = {details.types
+                      ? details.types.map(entry => capitalize(entry.type.name)).join(' / ')
+                      : 'Loading...'}
+                    abilities = {details.abilities 
+                      ? details.abilities.map(entry => capitalize(entry.ability.name)).join(', ')
+                      : 'Loading...'}
+                    weight = {details.weight 
+                      ? details.weight 
+                      : 'Loading...'}
+                  />
 
-                  <p><strong>Type: </strong>
-                    {types}</p>                  
+                  : <div></div>
+                }
 
-                  <p><strong>Abilities: </strong>
-                  {abilities}</p>                 
-                  <p><strong>Weight: </strong>
-                  {weight}</p>
-                </div>
               </li>
             ))}
           </ul>
@@ -153,7 +158,7 @@ class App extends Component {
           <button id='next' className='btn' onClick={() => this.getInfo("next")}>
             Next
           </button>
-          <button id='back' className='btn' onClick={() => this.showDetails.goBack()}>
+          <button id='back' className='btn' onClick={() => this.goBack(pokeList.name)}>
             Back
           </button>
         </div>
