@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 
 import './styles.scss';
 
@@ -26,10 +25,6 @@ export class Details extends Component {
 
         <p><strong>Abilities: </strong>
           {props.abilities}
-        </p>
-
-        <p><strong>Weight: </strong>
-          {props.weight}
         </p>
 
       </div>

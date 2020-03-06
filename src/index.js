@@ -140,10 +140,7 @@ class App extends Component {
                     abilities = {details.abilities 
                       ? details.abilities.map(entry => capitalize(entry.ability.name)).join(', ')
                       : 'Loading...'}
-                    weight = {details.weight 
-                      ? details.weight 
-                      : 'Loading...'}
-                  />
+                    />
 
                   : <div></div>
                 }
